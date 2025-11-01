@@ -31,7 +31,7 @@ Now, change the code and see the aktor restart!
 Here is a recorded demo:
 
 <a href="https://asciinema.org/a/753074">
-  <img src="https://asciinema.org/a/753074.svg" width="300">
+  <img src="https://asciinema.org/a/753074.png" width="300">
 </a>
 
 
