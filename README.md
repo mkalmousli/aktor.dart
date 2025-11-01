@@ -36,18 +36,19 @@ This leaves a gap in the Dart ecosystem for code generation and metaprogramming 
 
 ## Installation
 
+Sadly, I couldn't publish the package because there is "too similar" package called `actors` on pub.dev.
 
 ### Globally (Recommended)
 
 Add `actor` to your shell's PATH by running:
 ```bash
-dart pub global activate actor
+dart pub global activate --source git https://github.com/mkalmousli/actor.dart
+```
 
-Then you can run `actor` from anywhere:
+And then you can run `actor` from anywhere:
 ```bash
 actor
 ```
-
 
 ### For a Specific Project
 
@@ -55,15 +56,16 @@ Add `actor` to your `pubspec.yaml`:
 
 ```yaml
 dev_dependencies:
-  actor: ^0.0.1
+  actor:
+    git:
+      url: https://github.com/mkalmousli/actor.dart
 ```
 
-Then install it:
+And then update your dependencies:
 
 ```bash
 dart pub get
 ```
-
 
 ## Quick Start
 
