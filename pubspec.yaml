@@ -8,22 +8,22 @@ environment:
   sdk: ^3.9.2
 
 dependencies:
-  analyzer:
-  ansi:
-  async:
-  bloc:
-  code_builder:
-  collection:
-  crypto:
-  freezed_annotation:
+  analyzer: ^8.4.0
+  ansi: ^0.4.2
+  async: ^2.13.0
+  bloc: ^9.1.0
+  code_builder: ^4.11.0
+  collection: ^1.19.1
+  crypto: ^3.0.6
+  freezed_annotation: ^3.1.0
   path: ^1.9.0
   pubspec_lock: ^3.0.2
-  pubspec_yaml:
-  watcher:
+  pubspec_yaml: ^3.1.0
+  watcher: ^1.1.4
 
 dev_dependencies:
-  build_runner:
-  freezed:
+  build_runner: ^2.10.1
+  freezed: ^3.2.3
   lints: ^6.0.0
   test: ^1.25.6
 
