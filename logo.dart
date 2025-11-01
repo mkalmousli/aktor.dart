@@ -3,7 +3,7 @@ import 'package:aktor/src/ext.dart';
 
 @live
 @aktor
-Future<void> exportLOGO(C c) async {
+Future<void> exportLogo(C c) async {
   final fSvg = c.root.f("Logo.svg");
   final fProdSvg = c.root.f("LogoProd.svg");
   final fProdPng = c.root.f("LogoProd.png");

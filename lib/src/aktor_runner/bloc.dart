@@ -14,6 +14,8 @@ import 'package:path/path.dart';
 import 'state.dart' as s;
 import 'event.dart' as e;
 
+enum _IOType { stdout, stderr }
+
 /// Manages aktor process lifecycle using BLoC pattern.
 class AktorRunner extends bloc.Bloc<e.Event, s.State> {
   /// Aktor configuration.
@@ -113,30 +115,41 @@ class AktorRunner extends bloc.Bloc<e.Event, s.State> {
             }
 
             Future<void> waitForCompletion() async {
-              final prefix =
-                  "${relative(dartFile.file.path, from: dRoot.path)}:${aktor.lineNumber}:${aktor.columnNumber} #${aktor.functionName}";
+              // final prefix =
+              //     "${relative(dartFile.file.path, from: dRoot.path)}:${aktor.lineNumber}:${aktor.columnNumber} #${aktor.functionName}";
 
               // Only print "started" if not a reload (reloads are logged elsewhere)
-              if (!isReload) {
-                stdout.writeln(blue("$prefix started."));
+              if (isReload) {
+                stdout.writeln(magenta("* ${aktor.functionName}"));
+              } else {
+                final prefix =
+                    "${blue(aktor.functionName)}${aktor.isLive ? magenta("*") : ""}${aktor.requireContext ? yellow("#") : ""}";
+
+                stdout.writeln(blue("+ $prefix"));
               }
 
-              final lines = LineSplitter()
-                  .bind(
-                    Utf8Decoder().bind(
-                      StreamGroup.merge([process.stdout, process.stderr]),
-                    ),
-                  )
-                  .map((line) => "$prefix :: $line");
+              final stream = StreamGroup.merge([
+                process.stdout.map((chunk) => (0, chunk)),
+                process.stderr.map((chunk) => (1, chunk)),
+              ]);
 
-              await for (final line in lines) {
+              final utf8Decoder = Utf8Decoder();
+              final lineSplitter = LineSplitter();
+
+              await for (final (type, chunk) in stream) {
                 final currentState = state;
                 final isStopping = currentState.maybeWhen(
                   stopping: (p, f) => true,
                   orElse: () => false,
                 );
                 if (!isStopping) {
-                  stdout.writeln(line);
+                  final lines = lineSplitter.convert(
+                    utf8Decoder.convert(chunk),
+                  );
+                  for (var line in lines) {
+                    line = "  ${aktor.functionName} $line";
+                    stdout.writeln(type == 0 ? yellow(line) : red(line));
+                  }
                 }
               }
 
@@ -150,15 +163,15 @@ class AktorRunner extends bloc.Bloc<e.Event, s.State> {
 
               if (wasStopping) {
                 emit(s.State.stopped(runnerFile: fRunner));
-                stdout.writeln(red("$prefix is killed."));
+                stdout.writeln(red("- ${aktor.functionName}"));
               } else if (exitCode == 0) {
                 emit(
                   s.State.completed(exitCode: exitCode, runnerFile: fRunner),
                 );
-                stdout.writeln(green("$prefix is done."));
+                stdout.writeln(green("  ${aktor.functionName}"));
               } else {
                 emit(s.State.failed(exitCode: exitCode, runnerFile: fRunner));
-                stdout.writeln(red("$prefix FAILED WITH $exitCode!"));
+                stdout.writeln(red("x ${aktor.functionName} ($exitCode)"));
               }
 
               await _cleanupFile(fRunner);

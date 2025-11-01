@@ -34,7 +34,9 @@ Future<int> runCli(List<String> args) async {
     mode = Mode.prod;
   }
 
-  stdout.writeln(blue("Mode: ${mode.name}"));
+  stdout.w(white("aktor v$version | "));
+  stdout.w(blue("${mode.name} mode"));
+  stdout.nl();
 
   final dCurrent = Directory.current;
 
@@ -94,10 +96,10 @@ Future<int> runCli(List<String> args) async {
   final assetReader = AssetReader();
 
   // Forward declare the restart function
-  late Future<void> Function(b_aktor_runner.AktorRunner) _restartLiveAktor;
+  late Future<void> Function(b_aktor_runner.AktorRunner) restartLiveAktor;
 
   /// Sets up file watching for a live aktor's dependencies.
-  Future<void> _setupLiveAktorWatching(
+  Future<void> setupLiveAktorWatching(
     b_aktor_runner.AktorRunner runner,
     DartFile dartFile,
   ) async {
@@ -149,27 +151,27 @@ Future<int> runCli(List<String> args) async {
 
                     // Debounce: wait 200ms before restarting
                     // Only log on first detection, not on every event
-                    final changedFileRel = p.relative(
-                      depPath,
-                      from: dRoot.path,
-                    );
-                    final aktorPrefix =
-                        "${p.relative(runnerToRestart.dartFile.file.path, from: dRoot.path)}:${runnerToRestart.aktor.lineNumber}:${runnerToRestart.aktor.columnNumber} #${runnerToRestart.aktor.functionName}";
+                    // final changedFileRel = p.relative(
+                    //   depPath,
+                    //   from: dRoot.path,
+                    // );
+                    // final aktorPrefix =
+                    //     "${p.relative(runnerToRestart.dartFile.file.path, from: dRoot.path)}:${runnerToRestart.aktor.lineNumber}:${runnerToRestart.aktor.columnNumber} #${runnerToRestart.aktor.functionName}";
 
-                    // Only log if this is a new pending restart (not a cancellation and re-creation)
-                    if (!hadPending) {
-                      stdout.writeln(
-                        yellow(
-                          "File changed: $changedFileRel → reloading $aktorPrefix",
-                        ),
-                      );
-                    }
+                    // // Only log if this is a new pending restart (not a cancellation and re-creation)
+                    // if (!hadPending) {
+                    //   stdout.writeln(
+                    //     yellow(
+                    //       "File changed: $changedFileRel → reloading $aktorPrefix",
+                    //     ),
+                    //   );
+                    // }
 
                     final timer = Timer(
                       const Duration(milliseconds: 200),
                       () async {
                         pendingRestarts.remove(runnerToRestart);
-                        await _restartLiveAktor(runnerToRestart);
+                        await restartLiveAktor(runnerToRestart);
                       },
                     );
                     pendingRestarts[runnerToRestart] = timer;
@@ -192,7 +194,7 @@ Future<int> runCli(List<String> args) async {
   }
 
   /// Restarts a live aktor by stopping and starting it again.
-  _restartLiveAktor = (b_aktor_runner.AktorRunner runner) async {
+  restartLiveAktor = (b_aktor_runner.AktorRunner runner) async {
     // Check if runner still exists (might have been removed)
     if (!aktorRunners.contains(runner)) return;
 
@@ -216,15 +218,7 @@ Future<int> runCli(List<String> args) async {
     pendingRestarts.remove(runner);
 
     // Log reload start
-    final aktorPrefix =
-        "${p.relative(dartFile.file.path, from: dRoot.path)}:${aktor.lineNumber}:${aktor.columnNumber} #${aktor.functionName}";
-    final stateInfo = currentState.maybeWhen(
-      running: (_, __) => "running",
-      completed: (_, __) => "completed",
-      failed: (_, __) => "failed",
-      orElse: () => "unknown",
-    );
-    stdout.writeln(blue("Reloading $aktorPrefix (was $stateInfo)"));
+    // stdout.writeln(magenta("% ${aktor.functionName}"));
 
     // Save the dependencies before stopping (we'll need to clean them up)
     final oldDependencies = liveAktorDependencies[runner]?.toSet() ?? {};
@@ -271,7 +265,7 @@ Future<int> runCli(List<String> args) async {
 
     // Re-setup watching if in dev mode and aktor is live
     if (aktor.isLive && mode == Mode.dev) {
-      await _setupLiveAktorWatching(newRunner, dartFile);
+      await setupLiveAktorWatching(newRunner, dartFile);
     }
   };
 
@@ -288,7 +282,7 @@ Future<int> runCli(List<String> args) async {
 
     // If aktor is live and we're in dev mode, set up dependency watching
     if (aktor.isLive && mode == Mode.dev) {
-      await _setupLiveAktorWatching(runner, dartFile);
+      await setupLiveAktorWatching(runner, dartFile);
     }
   }
 
@@ -352,7 +346,7 @@ Future<int> runCli(List<String> args) async {
     final isFirstCycle = iCycle == 1;
 
     if (aktorRunners.isEmpty) {
-      stdout.writeln(yellow("Searching for aktors..."));
+      // stdout.writeln(yellow("Searching for aktors..."));
     }
 
     // Clear asset reader cache to ensure fresh reads
